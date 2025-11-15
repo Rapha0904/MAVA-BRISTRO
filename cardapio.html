@@ -49,11 +49,6 @@ header img{
     border-radius:50%;
     border:3px solid var(--dourado);
     object-fit:cover;
-    transition: .3s;
-}
-
-header img:hover{
-    transform:scale(1.05);
 }
 
 header h1{
@@ -61,7 +56,17 @@ header h1{
     font-weight:bold;
 }
 
-/* ================= CATEGORIAS ================= */
+/* INFO DA MESA */
+#mesaInfo{
+    background:white;
+    padding:10px 15px;
+    border-bottom:2px solid var(--dourado);
+    font-size:16px;
+    font-weight:bold;
+    color:var(--azul);
+}
+
+/* NAV */
 .nav{
     background:white;
     display:flex;
@@ -70,7 +75,6 @@ header h1{
     padding:10px;
     gap:15px;
     border-bottom:2px solid var(--dourado);
-    animation: fadeIn .6s ease;
 }
 
 .nav button{
@@ -84,32 +88,11 @@ header h1{
     transition:.3s;
 }
 
-.nav button:hover{
-    color:var(--dourado);
-}
-
 .nav button.active{
     border-bottom:3px solid var(--dourado);
 }
 
-/* ============= ANIMAÇÕES SUAVES ============= */
-
-@keyframes fadeIn {
-    from {opacity:0; transform:translateY(10px);}
-    to {opacity:1; transform:translateY(0);}
-}
-
-.card{
-    animation: cardEnter .5s ease forwards;
-    opacity:0;
-}
-
-@keyframes cardEnter {
-    from {opacity:0; transform: translateY(15px);}
-    to {opacity:1; transform: translateY(0);}
-}
-
-/* ================= GRID ================= */
+/* GRID */
 .menu-grid{
     display:grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -117,7 +100,7 @@ header h1{
     padding:15px;
 }
 
-/* ================= CARD PRODUTO ================= */
+/* CARD */
 .card{
     background:white;
     border-radius:14px;
@@ -125,15 +108,6 @@ header h1{
     padding:12px;
     border:2px solid var(--dourado);
     text-align:center;
-    transition: .3s;
-    max-width:260px;
-    margin:0 auto;
-}
-
-.card:hover{
-    transform:translateY(-6px);
-    box-shadow:0 6px 18px rgba(0,0,0,0.18);
-    border-color:var(--gold-light);
 }
 
 .card img{
@@ -141,20 +115,9 @@ header h1{
     height:140px;
     object-fit:cover;
     border-radius:10px;
-    margin-bottom:8px;
-    transition:.3s;
+    margin-bottom:5px;
 }
 
-.card img:hover{
-    transform:scale(1.03);
-}
-
-.card h3{
-    color:var(--azul);
-    margin-bottom:6px;
-}
-
-/* ------- Botão Adicionar Premium ------- */
 .card button.add{
     background:var(--dourado);
     border:none;
@@ -166,20 +129,9 @@ header h1{
     width:100%;
     color:white;
     font-size:15px;
-    transition:.2s;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
 }
 
-.card button.add:hover{
-    background:var(--gold-light);
-    transform:scale(1.04);
-}
-
-.card button.add:active{
-    transform:scale(.96);
-}
-
-/* =================== CARRINHO =================== */
+/* CARRINHO */
 #carrinho{
     position:fixed;
     right:0;
@@ -190,35 +142,9 @@ header h1{
     border-left:4px solid var(--dourado);
     padding:20px;
     transform:translateX(100%);
-    transition: .45s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition:.45s;
     overflow-y:auto;
     z-index:999;
-    box-shadow:-4px 0 15px rgba(0,0,0,0.15);
-    backdrop-filter: blur(3px);
-}
-
-#carrinho h2{
-    text-align:center;
-    color:var(--azul);
-    font-size:22px;
-    margin-bottom:15px;
-    font-weight:bold;
-}
-
-/* Itens animados */
-#lista-itens li{
-    background:#fafafa;
-    margin:5px 0;
-    padding:8px;
-    border-radius:6px;
-    border-left:4px solid var(--dourado);
-    list-style:none;
-    animation:itemAdd .4s ease;
-}
-
-@keyframes itemAdd {
-    from {opacity:0; transform:translateX(-10px);}
-    to {opacity:1; transform:translateX(0);}
 }
 
 #btn-carrinho{
@@ -232,12 +158,6 @@ header h1{
     cursor:pointer;
     z-index:1000;
     font-size:22px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.25);
-    transition:.3s;
-}
-
-#btn-carrinho:hover{
-    transform:scale(1.1);
 }
 
 .confirmar-btn{
@@ -249,28 +169,6 @@ header h1{
     border-radius:10px;
     margin-top:15px;
     font-weight:bold;
-    font-size:17px;
-    cursor:pointer;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-.confirmar-btn:hover{
-    background:#111739;
-}
-
-/* =================== RESPONSIVIDADE =================== */
-
-@media (max-width: 480px){
-    header{
-        flex-direction:column;
-        text-align:center;
-    }
-    .menu-grid{
-        grid-template-columns:1fr;
-    }
-    #carrinho{
-        width:92%;
-    }
 }
 </style>
 </head>
@@ -281,6 +179,8 @@ header h1{
     <img src="logo_mava_baristro.png">
     <h1>Mava Baristro - Cardápio</h1>
 </header>
+
+<div id="mesaInfo">Carregando dados da mesa...</div>
 
 <div id="btn-carrinho"><i class="fas fa-shopping-cart"></i></div>
 
@@ -296,132 +196,147 @@ header h1{
 <div id="carrinho">
     <h2>Carrinho</h2>
     <ul id="lista-itens"></ul>
-    <h3 id="total" style="margin-top:15px;">Total: R$ 0,00</h3>
-
-    <label>Mesa:</label>
-    <select id="mesa" style="width:100%;padding:10px;border-radius:8px;border:1px solid #aaa;">
-        <option value="">Selecione</option>
-    </select>
+    <h3 id="total">Total: R$ 0,00</h3>
 
     <button class="confirmar-btn" id="confirmar">Confirmar Pedido</button>
 </div>
 
 <script type="module">
-/* ================= DEVICE ID ================= */
-let deviceId = localStorage.getItem("deviceId");
-if (!deviceId) {
-    deviceId = "dev-" + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem("deviceId", deviceId);
+import { db } from "./ADMINISTRATIVO/firebase.js";
+import { ref, onValue, push } 
+    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+/* ================= LEITURA DA MESA VIA URL ================= */
+const urlParams = new URLSearchParams(window.location.search);
+const mesaID = urlParams.get("mesa");
+
+const mesaInfo = document.getElementById("mesaInfo");
+
+if(!mesaID){
+    mesaInfo.innerHTML = "❌ Mesa inválida. Use o QR Code correto.";
 }
 
-import { db } from "./ADMINISTRATIVO/firebase.js";
-import { ref, onValue, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+/* ================= VERIFICAÇÃO DA MESA NO FIREBASE ================= */
+let clientesMesa = [];
 
-const painel = document.getElementById("carrinho");
-document.getElementById("btn-carrinho").onclick = () => {
-    painel.style.transform =
-        painel.style.transform === "translateX(0%)"
+onValue(ref(db, "mesas/" + mesaID), snap=>{
+    if(!snap.exists()){
+        mesaInfo.innerHTML = `Mesa ${mesaID} não configurada.`;
+        return;
+    }
+
+    const dados = snap.val();
+    clientesMesa = dados.clientes || [];
+
+    if(dados.status === "livre"){
+        mesaInfo.innerHTML = `
+            Mesa ${mesaID} — <span style="color:red;font-weight:bold;">Aguardando cadastro</span>
+        `;
+    } else {
+        mesaInfo.innerHTML = `
+            ✔️ Bem-vindo(a), <b>${clientesMesa[0]}</b> — Mesa <b>${mesaID}</b>
+        `;
+    }
+});
+
+/* ================= CARRINHO ================= */
+let total = 0;
+let itens = [];
+
+const carrinho = document.getElementById("carrinho");
+document.getElementById("btn-carrinho").onclick = ()=>{
+    carrinho.style.transform =
+        carrinho.style.transform === "translateX(0%)"
         ? "translateX(100%)"
         : "translateX(0%)";
 };
 
-let categoriaAtual = "cafes";
+/* ================= CARREGAR PRODUTOS ================= */
 const grid = document.getElementById("grid");
-
-document.querySelectorAll(".nav button").forEach(btn=>{
-    btn.onclick = ()=>{
-        document.querySelectorAll(".nav button").forEach(b=> b.classList.remove("active"));
-        btn.classList.add("active");
-        categoriaAtual = btn.dataset.cat;
-        carregarProdutos();
-    };
-});
+let categoriaAtual = "cafes";
 
 function carregarProdutos(){
-    onValue(ref(db,"produtos"), snap=>{
+    onValue(ref(db, "produtos"), snap=>{
         grid.innerHTML = "";
-
-        let delay = 0;
 
         snap.forEach(item=>{
             const p = item.val();
             if(p.categoria !== categoriaAtual) return;
 
             grid.innerHTML += `
-                <div class="card" style="animation-delay:${delay}s">
+                <div class="card">
                     <img src="${p.foto}">
                     <h3>${p.nome}</h3>
                     <p>R$ ${p.preco}</p>
                     <p>${p.quantidade || ""}</p>
-
                     <button class="add"
-                     data-nome="${p.nome}"
-                     data-preco="${p.preco}">
-                        <i class="fas fa-plus"></i> Adicionar
+                        data-nome="${p.nome}"
+                        data-preco="${p.preco}">
+                        + Adicionar
                     </button>
-                </div>
-            `;
-
-            delay += 0.08; /* Delay em cascata */
+                </div>`;
         });
 
-        ativarBotoes();
+        activarBotoes();
     });
 }
 carregarProdutos();
 
-let total = 0;
-const ul = document.getElementById("lista-itens");
+document.querySelectorAll(".nav button").forEach(btn=>{
+    btn.onclick = ()=>{
+        document.querySelectorAll(".nav button")
+        .forEach(b=>b.classList.remove("active"));
 
-function ativarBotoes(){
+        btn.classList.add("active");
+        categoriaAtual = btn.dataset.cat;
+        carregarProdutos();
+    };
+});
+
+function activarBotoes(){
     document.querySelectorAll(".add").forEach(btn=>{
         btn.onclick = ()=>{
             const nome = btn.dataset.nome;
             const preco = parseFloat(btn.dataset.preco);
 
+            itens.push(nome);
             total += preco;
-            document.getElementById("total").innerText = `Total: R$ ${total.toFixed(2)}`;
 
             const li = document.createElement("li");
             li.innerText = `${nome} — R$ ${preco.toFixed(2)}`;
-            ul.appendChild(li);
+            document.getElementById("lista-itens").appendChild(li);
+
+            document.getElementById("total").innerText =
+                `Total: R$ ${total.toFixed(2)}`;
         };
     });
 }
 
-/* MESA */
-const selectMesa = document.getElementById("mesa");
-for(let i=1;i<=25;i++){
-    let op = document.createElement("option");
-    op.value=i;
-    op.innerText="Mesa "+i;
-    selectMesa.appendChild(op);
-}
-
-/* ENVIAR PEDIDO */
+/* ================= ENVIAR PEDIDO ================= */
 document.getElementById("confirmar").onclick = ()=>{
 
-    const mesa = selectMesa.value;
-    if(!mesa){
-        alert("Selecione a mesa!");
+    if(clientesMesa.length === 0){
+        alert("A mesa ainda não está configurada pelo recepcionista.");
         return;
     }
 
-    const itens = [];
-    ul.querySelectorAll("li").forEach(li=> itens.push(li.innerText));
+    if(itens.length === 0){
+        alert("Adicione itens ao carrinho!");
+        return;
+    }
 
     const pedido = {
-        mesa,
-        itens,
-        total,
-        status:"novo",
-        hora:Date.now(),
-        deviceId: deviceId
+        mesa: mesaID,
+        nomes: clientesMesa,
+        itens: itens,
+        total: total,
+        status: "novo",
+        hora: Date.now()
     };
 
-    push(ref(db,"pedidos"), pedido);
+    push(ref(db, "pedidos"), pedido);
 
-    alert("Pedido enviado!");
+    alert("Pedido enviado com sucesso!");
     location.reload();
 };
 </script>
