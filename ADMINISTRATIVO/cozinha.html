@@ -194,7 +194,11 @@ onValue(ref(db, "pedidos"), snap => {
         }
     });
 
-    pedidos.sort((a,b)=> a.hora - b.hora);
+    /* ORDENAR POR STATUS E HORÁRIO */
+    pedidos.sort((a, b) => {
+        const ordem = { novo: 1, preparando: 2, pronto: 3 };
+        return ordem[a.status] - ordem[b.status] || a.hora - b.hora;
+    });
 
     /* Detectar novo pedido */
     if (!primeiraVez) {
@@ -226,8 +230,9 @@ onValue(ref(db, "pedidos"), snap => {
 
     primeiraVez = false;
 
-    /* Renderizar lista */
+    /* ================= RENDERIZAR LISTA ================= */
     lista.innerHTML = "";
+
     pedidos.forEach(p => {
 
         let statusClass =
