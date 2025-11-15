@@ -120,6 +120,15 @@ onAuthStateChanged(auth, user => {
 });
 window.logout = () => signOut(auth);
 
+/* ============== PEGAR DEVICE DO CLIENTE ============== */
+let deviceId = localStorage.getItem("deviceId");
+
+if (!deviceId) {
+    // caso abra no caixa antes do cliente pedir
+    deviceId = "dev-" + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem("deviceId", deviceId);
+}
+
 /* ============================= LISTAR PEDIDOS PRONTOS ============================= */
 const lista = document.getElementById("lista");
 
@@ -131,8 +140,11 @@ onValue(ref(db, "pedidos"), snap => {
         const p = item.val();
         const id = item.key;
 
-        // só mostrar pedidos com status "pronto"
-        if (!p || p.status !== "pronto") return;
+        if (!p) return;
+
+        // Mostrar apenas pedidos PRONTOS deste dispositivo
+        if (p.status !== "pronto") return;
+        if (p.deviceId !== deviceId) return;
 
         const hora = new Date(p.hora).toLocaleTimeString("pt-BR");
 
