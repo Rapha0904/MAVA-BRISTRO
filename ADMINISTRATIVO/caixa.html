@@ -11,7 +11,6 @@
 
 <style>
 
-/* =================== ESTILO DOS CARDS =================== */
 .pedido-card{
     background:white;
     border-radius:14px;
@@ -21,52 +20,20 @@
     border:2px solid var(--dourado);
     transition:.3s;
 }
-
 .pedido-card:hover{
     transform: translateY(-4px);
-    box-shadow:0 6px 18px rgba(0,0,0,0.18);
 }
-
 .pedido-card h3{
     color:var(--azul);
     margin-bottom:6px;
     font-size:20px;
     font-weight: bold;
 }
-
 .pedido-card ul{
     padding-left:20px;
     margin-top:6px;
-    font-size:15px;
 }
 
-/* TAGS DE PAGAMENTO */
-.pay-tags{
-    display:flex;
-    gap:8px;
-    font-size:14px;
-    margin-top:10px;
-    flex-wrap:wrap;
-}
-
-.pay-tag{
-    padding:6px 12px;
-    border-radius:50px;
-    background:#f2f2f2;
-    color:var(--azul);
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-weight:bold;
-    border:1px solid #ddd;
-    transition:.2s;
-}
-
-.pay-tag:hover{
-    background:#e8e8e8;
-}
-
-/* SELECT */
 .pay-select{
     width:100%;
     padding:10px;
@@ -75,7 +42,6 @@
     margin-top:10px;
 }
 
-/* BOTÃO FINALIZAR */
 .finalizar-btn{
     margin-top:15px;
     width:100%;
@@ -87,24 +53,16 @@
     font-weight:bold;
     font-size:16px;
     cursor:pointer;
-    transition:.25s;
 }
-
-.finalizar-btn:hover{
-    background:#0d153b;
-}
-
 </style>
 </head>
 
 <body>
 
-<!-- BOTÃO MOBILE -->
 <div class="menu-toggle" onclick="toggleMenu()">
     <i class="fas fa-bars"></i>
 </div>
 
-<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
 
     <h2>Mava Baristro</h2>
@@ -134,7 +92,6 @@
     </div>
 </div>
 
-<!-- CONTEÚDO -->
 <div class="content">
 
     <h1 class="title">
@@ -147,8 +104,8 @@
 
 <script type="module">
 
-/* ============================= FIREBASE ============================= */
-import { auth, db }
+/* 🔥 IMPORTAÇÃO CORRETA PARA O GITHUB PAGES */
+import { auth, db } 
 from "https://rapha0904.github.io/MAVA-BRISTRO/ADMINISTRATIVO/firebase.js";
 
 import { onAuthStateChanged, signOut }
@@ -160,13 +117,13 @@ import {
     update
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-/* ============================= PROTEÇÃO ============================= */
+/* LOGIN */
 onAuthStateChanged(auth, user => {
-    if (!user) window.location.href = "../login.html";
+    if (!user) window.location.href = "login.html";
 });
 window.logout = () => signOut(auth);
 
-/* ============================= LISTAR PEDIDOS ============================= */
+/* LISTAR PEDIDOS PRONTOS */
 const lista = document.getElementById("lista");
 
 onValue(ref(db, "pedidos"), snap => {
@@ -174,21 +131,16 @@ onValue(ref(db, "pedidos"), snap => {
     lista.innerHTML = "";
 
     snap.forEach(item => {
-
+        
         const p = item.val();
         const id = item.key;
 
         if (!p) return;
-
-        /* Mostrar apenas pedidos prontos */
         if (p.status !== "pronto") return;
-
-        const hora = new Date(p.hora).toLocaleTimeString("pt-BR");
 
         lista.innerHTML += `
             <div class="pedido-card">
                 <h3>Mesa ${p.mesa}</h3>
-                <p><b>Horário:</b> ${hora}</p>
 
                 <p><b>Itens:</b></p>
                 <ul>${p.itens.map(i => `<li>${i}</li>`).join("")}</ul>
@@ -198,15 +150,15 @@ onValue(ref(db, "pedidos"), snap => {
                 </p>
 
                 <select id="pg-${id}" class="pay-select">
-                    <option value="">Selecione a forma de pagamento</option>
+                    <option value="">Forma de pagamento</option>
                     <option value="Dinheiro">Dinheiro</option>
                     <option value="Pix">Pix</option>
-                    <option value="Cartão Débito">Cartão Débito</option>
-                    <option value="Cartão Crédito">Cartão Crédito</option>
-                    <option value="Vale Refeição">Vale Refeição</option>
+                    <option value="Débito">Débito</option>
+                    <option value="Crédito">Crédito</option>
                 </select>
 
-                <button class="finalizar-btn" onclick="finalizar('${id}')">
+                <button class="finalizar-btn"
+                    onclick="finalizar('${id}')">
                     <i class="fas fa-check-circle"></i> Finalizar Pedido
                 </button>
             </div>
@@ -214,7 +166,7 @@ onValue(ref(db, "pedidos"), snap => {
     });
 });
 
-/* ============================= FINALIZAR ============================= */
+/* FINALIZAR PEDIDO */
 window.finalizar = id => {
 
     const forma = document.getElementById("pg-" + id).value;
@@ -229,14 +181,15 @@ window.finalizar = id => {
         pagamento: forma
     });
 
-    alert("Pedido finalizado com sucesso!");
+    alert("Pedido finalizado!");
 };
-
 </script>
 
 <script>
 function go(p){ window.location.href = p; }
-function toggleMenu(){ document.getElementById("sidebar").classList.toggle("active"); }
+function toggleMenu(){
+    document.getElementById("sidebar").classList.toggle("active");
+}
 </script>
 
 </body>
