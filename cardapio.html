@@ -34,23 +34,23 @@ body{
 header{
     background:var(--azul);
     color:var(--dourado);
-    padding:20px;
+    padding:15px;
     display:flex;
     align-items:center;
-    gap:20px;
+    gap:15px;
     border-bottom:4px solid var(--dourado);
 }
 
 header img{
-    width:70px;
-    height:70px;
+    width:60px;
+    height:60px;
     border-radius:50%;
     border:3px solid var(--dourado);
     object-fit:cover;
 }
 
 header h1{
-    font-size:26px;
+    font-size:22px;
     font-weight:bold;
 }
 
@@ -59,8 +59,9 @@ header h1{
     background:white;
     display:flex;
     justify-content:center;
+    flex-wrap:wrap;
     padding:10px;
-    gap:25px;
+    gap:15px;
     border-bottom:2px solid var(--dourado);
 }
 
@@ -68,22 +69,22 @@ header h1{
     background:none;
     border:none;
     color:var(--azul);
-    font-size:18px;
+    font-size:16px;
     font-weight:bold;
     cursor:pointer;
-    padding:6px 12px;
+    padding:6px 10px;
 }
 
 .nav button.active{
     border-bottom:3px solid var(--dourado);
 }
 
-/* GRID AJUSTADA PARA 4 CARDS POR LINHA */
+/* GRID RESPONSIVA */
 .menu-grid{
     display:grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap:25px;
-    padding:20px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap:20px;
+    padding:15px;
 }
 
 /* CARD PRODUTO */
@@ -91,30 +92,29 @@ header h1{
     background:white;
     border-radius:14px;
     box-shadow:0 4px 12px rgba(0,0,0,0.1);
-    padding:15px;
+    padding:12px;
     border:2px solid var(--dourado);
     text-align:center;
     transition:.3s;
-    max-width:260px; /* NOVO: limita o tamanho */
-    margin:0 auto;  /* NOVO: centraliza */
+    max-width:260px;
+    margin:0 auto;
 }
 
 .card:hover{
     transform:translateY(-6px);
 }
 
-/* IMAGEM DO PRODUTO 600x400 AJUSTADA */
 .card img{
     width:100%;
-    height:160px;        /* altura fixa elegante */
-    object-fit:cover;    /* RECORTA mantendo layout */
+    height:140px;
+    object-fit:cover;
     border-radius:10px;
-    margin-bottom:10px;
+    margin-bottom:8px;
 }
 
 .card h3{
     color:var(--azul);
-    margin-bottom:8px;
+    margin-bottom:6px;
 }
 
 /* CARRINHO */
@@ -122,7 +122,7 @@ header h1{
     position:fixed;
     right:0;
     top:0;
-    width:330px;
+    width:300px;
     height:100vh;
     background:white;
     border-left:4px solid var(--dourado);
@@ -135,15 +135,15 @@ header h1{
 
 #btn-carrinho{
     position:fixed;
-    right:20px;
-    top:20px;
+    right:15px;
+    top:15px;
     background:var(--azul);
     color:var(--dourado);
-    padding:12px 18px;
+    padding:12px 16px;
     border-radius:50px;
     cursor:pointer;
     z-index:1000;
-    font-size:23px;
+    font-size:22px;
     box-shadow:0 4px 10px rgba(0,0,0,0.25);
 }
 
@@ -158,21 +158,68 @@ header h1{
     font-weight:bold;
     cursor:pointer;
 }
+
+/* =================== RESPONSIVIDADE =================== */
+
+/* Celulares pequenos */
+@media (max-width: 480px){
+
+    header{
+        flex-direction:column;
+        text-align:center;
+    }
+
+    header h1{
+        font-size:18px;
+    }
+
+    .menu-grid{
+        grid-template-columns: 1fr;
+        padding:10px;
+    }
+
+    #btn-carrinho{
+        top:10px;
+        right:10px;
+        padding:10px 14px;
+        font-size:20px;
+    }
+
+    #carrinho{
+        width:90%;
+    }
+}
+
+/* Celulares maiores */
+@media (min-width: 481px) and (max-width: 768px){
+    .menu-grid{
+        grid-template-columns: repeat(2, 1fr);
+        gap:15px;
+    }
+
+    header{
+        padding:12px;
+    }
+}
+
+/* Tablets */
+@media (min-width: 769px) and (max-width: 1024px){
+    .menu-grid{
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <header>
     <img src="logo_mava_baristro.png">
     <h1>Mava Baristro - Cardápio</h1>
 </header>
 
-<!-- BOTÃO DO CARRINHO -->
 <div id="btn-carrinho"><i class="fas fa-shopping-cart"></i></div>
 
-<!-- CATEGORIAS -->
 <div class="nav">
     <button class="active" data-cat="cafes">Cafés</button>
     <button data-cat="bebidas">Bebidas</button>
@@ -180,10 +227,8 @@ header h1{
     <button data-cat="salgados">Salgados</button>
 </div>
 
-<!-- GRID DE PRODUTOS -->
 <div class="menu-grid" id="grid"></div>
 
-<!-- CARRINHO -->
 <div id="carrinho">
     <h2>Carrinho</h2>
     <ul id="lista-itens"></ul>
@@ -198,11 +243,9 @@ header h1{
 </div>
 
 <script type="module">
-/* IMPORTAÇÃO */
 import { db } from "./ADMINISTRATIVO/firebase.js";
 import { ref, onValue, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-/* === ABRIR / FECHAR CARRINHO === */
 const painel = document.getElementById("carrinho");
 document.getElementById("btn-carrinho").onclick = () => {
     painel.style.transform =
@@ -211,7 +254,6 @@ document.getElementById("btn-carrinho").onclick = () => {
         : "translateX(0%)";
 };
 
-/* === CATEGORIAS === */
 let categoriaAtual = "cafes";
 const grid = document.getElementById("grid");
 
@@ -224,14 +266,12 @@ document.querySelectorAll(".nav button").forEach(btn=>{
     };
 });
 
-/* === CARREGAR PRODUTOS === */
 function carregarProdutos(){
     onValue(ref(db,"produtos"), snap=>{
         grid.innerHTML = "";
 
         snap.forEach(item=>{
             const p = item.val();
-
             if(p.categoria !== categoriaAtual) return;
 
             grid.innerHTML += `
@@ -255,7 +295,6 @@ function carregarProdutos(){
 }
 carregarProdutos();
 
-/* === CARRINHO === */
 let total = 0;
 const ul = document.getElementById("lista-itens");
 
@@ -275,7 +314,6 @@ function ativarBotoes(){
     });
 }
 
-/* === MESAS === */
 const selectMesa = document.getElementById("mesa");
 for(let i=1;i<=25;i++){
     let op = document.createElement("option");
@@ -284,9 +322,7 @@ for(let i=1;i<=25;i++){
     selectMesa.appendChild(op);
 }
 
-/* === ENVIAR PEDIDO === */
 document.getElementById("confirmar").onclick = ()=>{
-
     const mesa = selectMesa.value;
     if(!mesa){
         alert("Selecione a mesa!");
@@ -305,7 +341,6 @@ document.getElementById("confirmar").onclick = ()=>{
     };
 
     push(ref(db,"pedidos"), pedido);
-
     alert("Pedido enviado!");
     location.reload();
 };
