@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caixa - Mava Baristro</title>
+
+<link rel="stylesheet" href="admin.css">
+<link rel="stylesheet"
+ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+.pedido-card{
+    background:white;
+    border-radius:12px;
+    padding:18px;
+    margin-bottom:15px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+.pedido-card h3{
+    color:var(--azul);
+    margin-bottom:6px;
+}
+.pedido-card ul{
+    padding-left:18px;
+    margin-top:5px;
+}
+.pay-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:10px;
+}
+.pay-select{
+    flex:1;
+}
+.pay-tags{
+    display:flex;
+    gap:6px;
+    font-size:14px;
+    margin-top:6px;
+}
+.pay-tag{
+    padding:3px 8px;
+    border-radius:999px;
+    background:#f0f0f0;
+    display:flex;
+    align-items:center;
+    gap:5px;
+}
+.pay-tag i{
+    font-size:13px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- BOTÃO MENU MOBILE -->
+<div class="menu-toggle" onclick="toggleMenu()">
+    <i class="fas fa-bars"></i>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+
+    <h2>Mava Baristro</h2>
+
+    <div class="menu-item" onclick="go('dashboard.html')">
+        <i class="fas fa-chart-line"></i> Dashboard
+    </div>
+
+    <div class="menu-item" onclick="go('produtos.html')">
+        <i class="fas fa-mug-hot"></i> Produtos
+    </div>
+
+    <div class="menu-item" onclick="go('cozinha.html')">
+        <i class="fas fa-kitchen-set"></i> Cozinha
+    </div>
+
+    <div class="menu-item" onclick="go('caixa.html')">
+        <i class="fas fa-cash-register"></i> Caixa
+    </div>
+
+    <div class="menu-item" onclick="go('colaboradores.html')">
+        <i class="fas fa-users"></i> Colaboradores
+    </div>
+
+    <div class="menu-item" onclick="logout()">
+        <i class="fas fa-door-open"></i> Sair
+    </div>
+</div>
+
+<!-- CONTEÚDO -->
+<div class="content">
+
+    <h1 class="title">
+        <i class="fas fa-cash-register"></i> Pedidos do Caixa
+    </h1>
+
+    <div id="lista"></div>
+
+</div>
+
+<script type="module">
+/* ============================= FIREBASE ============================= */
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged, signOut }
+    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+import {
+    ref,
+    onValue,
+    update
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+/* ============================= PROTEÇÃO ============================= */
+onAuthStateChanged(auth, user => {
+    if (!user) window.location.href = "../login.html";
+});
+window.logout = () => signOut(auth);
+
+/* ============================= LISTAR PEDIDOS PRONTOS ============================= */
+const lista = document.getElementById("lista");
+
+onValue(ref(db, "pedidos"), snap => {
+
+    lista.innerHTML = "";
+
+    snap.forEach(item => {
+        const p = item.val();
+        const id = item.key;
+
+        // só mostrar pedidos com status "pronto"
+        if (!p || p.status !== "pronto") return;
+
+        const hora = new Date(p.hora).toLocaleTimeString("pt-BR");
+
+        lista.innerHTML += `
+            <div class="pedido-card">
+                <h3>Mesa ${p.mesa}</h3>
+                <p><b>Horário:</b> ${hora}</p>
+
+                <p><b>Itens:</b></p>
+                <ul>
+                    ${p.itens.map(i => `<li>${i}</li>`).join("")}
+                </ul>
+
+                <p style="margin-top:8px;">
+                    <b>Total:</b> R$ ${p.total.toFixed(2)}
+                </p>
+
+                <div class="pay-row">
+                    <select id="pg-${id}" class="pay-select">
+                        <option value="">Selecione a forma de pagamento</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="Pix">Pix</option>
+                        <option value="Cartão Débito">Cartão Débito</option>
+                        <option value="Cartão Crédito">Cartão Crédito</option>
+                        <option value="Vale Refeição">Vale Refeição</option>
+                    </select>
+                </div>
+
+                <div class="pay-tags">
+                    <span class="pay-tag"><i class="fas fa-money-bill-wave"></i> Dinheiro</span>
+                    <span class="pay-tag"><i class="fas fa-qrcode"></i> Pix</span>
+                    <span class="pay-tag"><i class="fas fa-credit-card"></i> Cartão</span>
+                    <span class="pay-tag"><i class="fas fa-utensils"></i> VR</span>
+                </div>
+
+                <button class="btn btn-primary" style="margin-top:12px;"
+                    onclick="finalizar('${id}')">
+                    <i class="fas fa-check-circle"></i> Finalizar Pedido
+                </button>
+            </div>
+        `;
+    });
+});
+
+/* ============================= FINALIZAR PEDIDO ============================= */
+window.finalizar = id => {
+
+    const select = document.getElementById("pg-" + id);
+    const forma = select ? select.value : "";
+
+    if(!forma){
+        alert("Selecione a forma de pagamento!");
+        return;
+    }
+
+    update(ref(db, "pedidos/" + id), {
+        status: "finalizado",
+        pagamento: forma
+    });
+
+    alert("Pedido finalizado com sucesso!");
+};
+</script>
+
+<script>
+function go(p){ window.location.href = p; }
+function toggleMenu(){ document.getElementById("sidebar").classList.toggle("active"); }
+</script>
+
+</body>
+</html>

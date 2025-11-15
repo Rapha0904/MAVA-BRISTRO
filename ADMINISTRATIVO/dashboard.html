@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - Mava Baristro</title>
+
+<link rel="stylesheet" href="admin.css">
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+/* CARDS DO DASHBOARD */
+.dash-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(250px,1fr));
+    gap:20px;
+    margin-top:20px;
+}
+
+.dash-card{
+    background:white;
+    padding:20px;
+    border-radius:14px;
+    box-shadow:0 3px 12px rgba(0,0,0,0.12);
+    border-left:6px solid var(--dourado);
+    transition:.3s;
+}
+
+.dash-card:hover{
+    transform:translateY(-5px);
+}
+
+.dash-title{
+    font-size:20px;
+    font-weight:bold;
+    color:var(--azul);
+}
+
+.dash-value{
+    font-size:32px;
+    margin-top:10px;
+    font-weight:bold;
+    color:var(--azul);
+}
+
+</style>
+
+</head>
+<body>
+
+<!-- BTN MOBILE -->
+<div class="menu-toggle" onclick="toggleMenu()">
+    <i class="fas fa-bars"></i>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+
+    <h2>Mava Baristro</h2>
+
+    <div class="menu-item" onclick="go('dashboard.html')">
+        <i class="fas fa-chart-line"></i> Dashboard
+    </div>
+
+    <div class="menu-item" onclick="go('produtos.html')">
+        <i class="fas fa-mug-hot"></i> Produtos
+    </div>
+
+    <div class="menu-item" onclick="go('colaboradores.html')">
+        <i class="fas fa-users"></i> Colaboradores
+    </div>
+
+    <div class="menu-item" onclick="logout()">
+        <i class="fas fa-door-open"></i> Sair
+    </div>
+
+</div>
+
+<!-- CONTEÚDO -->
+<div class="content">
+    <h1 class="title">Dashboard Administrativo</h1>
+
+    <!-- CARDS INFORMATIVOS -->
+    <div class="dash-grid">
+        
+        <div class="dash-card">
+            <div class="dash-title"><i class="fas fa-receipt"></i> Pedidos do dia</div>
+            <div class="dash-value" id="totalPedidos">0</div>
+        </div>
+
+        <div class="dash-card">
+            <div class="dash-title"><i class="fas fa-money-bill-wave"></i> Total vendido (R$)</div>
+            <div class="dash-value" id="totalVendas">0,00</div>
+        </div>
+
+        <div class="dash-card">
+            <div class="dash-title"><i class="fas fa-users"></i> Colaboradores</div>
+            <div class="dash-value" id="totalColaboradores">0</div>
+        </div>
+
+        <div class="dash-card">
+            <div class="dash-title"><i class="fas fa-box"></i> Produtos cadastrados</div>
+            <div class="dash-value" id="totalProdutos">0</div>
+        </div>
+
+    </div>
+
+    <!-- CARD DE BOAS VINDAS -->
+    <div class="card" style="margin-top:30px;">
+        <h2 style="color:var(--azul)">Bem-vindo ao painel, Administrador!</h2>
+        <p style="font-size:18px;margin-top:10px;">
+            Aqui você acompanha pedidos, colaboradores e produtos de forma centralizada.
+        </p>
+    </div>
+
+</div>
+
+<!-- ========================= FIREBASE ========================= -->
+<script type="module">
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged, signOut }
+from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+import {
+    ref,
+    onValue
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+/* ====== Proteção ====== */
+onAuthStateChanged(auth, user => {
+    if (!user) window.location.href = "../login.html";
+});
+window.logout = () => signOut(auth);
+
+
+/* ====== TOTAL DE PEDIDOS E VENDAS ====== */
+const totalPedidos = document.getElementById("totalPedidos");
+const totalVendas  = document.getElementById("totalVendas");
+
+onValue(ref(db, "pedidos"), snap => {
+    let pedidosHoje = 0;
+    let valorTotal  = 0;
+
+    snap.forEach(item => {
+        const p = item.val();
+
+        const dataPedido = new Date(p.hora);
+        const hoje = new Date();
+
+        const mesmoDia =
+            dataPedido.getDate() === hoje.getDate() &&
+            dataPedido.getMonth() === hoje.getMonth() &&
+            dataPedido.getFullYear() === hoje.getFullYear();
+
+        if (mesmoDia) {
+            pedidosHoje++;
+            valorTotal += Number(p.total);
+        }
+    });
+
+    totalPedidos.innerText = pedidosHoje;
+    totalVendas.innerText = valorTotal.toFixed(2).replace(".", ",");
+});
+
+
+/* ====== TOTAL DE PRODUTOS ====== */
+const totalProdutos = document.getElementById("totalProdutos");
+
+onValue(ref(db, "produtos"), snap => {
+    totalProdutos.innerText = snap.size || snap.numChildren();
+});
+
+
+/* ====== TOTAL DE COLABORADORES ====== */
+const totalColaboradores = document.getElementById("totalColaboradores");
+
+onValue(ref(db, "colaboradores"), snap => {
+    totalColaboradores.innerText = snap.size || snap.numChildren();
+});
+
+</script>
+
+<script>
+function go(pagina){
+    window.location.href = pagina;
+}
+function toggleMenu(){
+    document.getElementById("sidebar").classList.toggle("active");
+}
+</script>
+
+</body>
+</html>

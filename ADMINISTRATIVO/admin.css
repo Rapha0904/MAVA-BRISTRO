@@ -1,0 +1,210 @@
+/* ================================
+   TEMA PADRÃO MAVA BARISTRO
+================================ */
+:root{
+    --azul:#0a0f2e;
+    --dourado:#caa063;
+    --azul-claro:#13204d;
+    --fundo:#f5f5f5;
+    --branco:#ffffff;
+    --cinza:#e1e1e1;
+}
+
+/* GLOBAL */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Segoe UI", Arial, sans-serif;
+}
+
+body{
+    display:flex;
+    background:var(--fundo);
+}
+
+/* ================================
+   SIDEBAR
+================================ */
+.sidebar{
+    width:260px;
+    height:100vh;
+    background:var(--azul);
+    color:var(--branco);
+    display:flex;
+    flex-direction:column;
+    padding:30px 20px;
+    position:fixed;
+    top:0;
+    left:0;
+    box-shadow:4px 0 15px rgba(0,0,0,0.3);
+}
+
+.sidebar h2{
+    text-align:center;
+    margin-bottom:25px;
+    color:var(--dourado);
+    font-size:26px;
+}
+
+.menu-item{
+    padding:14px;
+    margin-bottom:12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:17px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    transition:.3s;
+}
+
+.menu-item:hover{
+    background:var(--azul-claro);
+}
+
+.menu-item i{
+    font-size:20px;
+    color:var(--dourado);
+}
+
+/* ================================
+   CONTEÚDO PRINCIPAL
+================================ */
+.content{
+    margin-left:260px;
+    padding:35px;
+    width:100%;
+}
+
+/* TÍTULOS */
+.title{
+    font-size:30px;
+    color:var(--azul);
+    margin-bottom:25px;
+}
+
+/* CONTAINER PADRÃO */
+.card{
+    background:var(--branco);
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    margin-bottom:30px;
+}
+
+/* INPUTS */
+input, select, textarea{
+    width:100%;
+    padding:12px;
+    border:2px solid var(--cinza);
+    border-radius:10px;
+    font-size:15px;
+    margin-bottom:15px;
+}
+
+input:focus, select:focus, textarea:focus{
+    border-color:var(--dourado);
+    outline:none;
+}
+
+/* BOTÕES */
+.btn{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.btn-primary{
+    background:var(--azul);
+    color:var(--dourado);
+}
+
+.btn-primary:hover{
+    opacity:.85;
+}
+
+.btn-danger{
+    background:#c41e1e;
+    color:white;
+}
+
+.btn-danger:hover{
+    opacity:.85;
+}
+
+/* LISTA */
+.list-item{
+    background:white;
+    padding:18px;
+    margin-bottom:15px;
+    border-radius:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* TABELAS */
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+}
+
+th, td{
+    padding:14px;
+    border-bottom:1px solid #ddd;
+}
+
+th{
+    background:var(--azul);
+    color:var(--dourado);
+    font-size:17px;
+}
+
+/* RESPONSIVIDADE */
+@media(max-width:900px){
+    .sidebar{
+        width:200px;
+    }
+
+    .content{
+        margin-left:200px;
+    }
+}
+
+@media(max-width:700px){
+    .sidebar{
+        position:absolute;
+        transform:translateX(-100%);
+        transition:.4s;
+        z-index:999;
+    }
+
+    .sidebar.active{
+        transform:translateX(0%);
+    }
+
+    .content{
+        margin-left:0;
+    }
+
+    .menu-toggle{
+        position:fixed;
+        top:20px;
+        left:20px;
+        background:var(--azul);
+        padding:10px;
+        border-radius:8px;
+        color:var(--dourado);
+        cursor:pointer;
+        font-size:20px;
+        z-index:998;
+    }
+}
