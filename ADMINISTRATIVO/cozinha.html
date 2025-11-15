@@ -63,7 +63,6 @@
     from {opacity: 0; transform: translateY(20px);}
     to {opacity: 1; transform: translateY(0);}
 }
-
 </style>
 </head>
 
@@ -101,6 +100,10 @@
 
     <div class="menu-item" onclick="go('caixa.html')">
         <i class="fas fa-cash-register"></i> Caixa
+    </div>
+
+    <div class="menu-item" onclick="go('colaboradores.html')">
+        <i class="fas fa-users"></i> Colaboradores
     </div>
 
     <div class="menu-item" onclick="logout()">
@@ -154,7 +157,7 @@ document.addEventListener("click", function liberarAudio() {
 
 <script type="module">
 
-import { auth, db } from "./firebase.js";
+import { auth, db } from "../firebase.js"; /* ← CORREÇÃO IMPORTANTE */
 import { onAuthStateChanged, signOut }
 from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
@@ -203,9 +206,9 @@ onValue(ref(db, "pedidos"), snap => {
     /* Detectar novo pedido */
     if (!primeiraVez) {
 
-        const maisRecente = pedidos[pedidos.length - 1];
+        const maisRecente = pedidos.find(p => p.status === "novo");
 
-        if (maisRecente && maisRecente.id !== ultimoId && maisRecente.status === "novo") {
+        if (maisRecente && maisRecente.id !== ultimoId) {
             
             ultimoId = maisRecente.id;
 
@@ -224,7 +227,7 @@ onValue(ref(db, "pedidos"), snap => {
             setTimeout(() => {
                 const card = document.getElementById("pedido-" + maisRecente.id);
                 if (card) card.classList.add("pedido-novo-flash");
-            }, 400);
+            }, 300);
         }
     }
 
