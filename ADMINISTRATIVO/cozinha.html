@@ -10,44 +10,60 @@
  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
-
-/* BADGES DE STATUS */
+/* BADGES */
 .status-badge{
     display:inline-block;
     padding:6px 12px;
     border-radius:8px;
     font-weight:bold;
     margin-top:10px;
+    font-size:13px;
 }
 .status-novo{ background:#d9534f; color:white; }
 .status-prep{ background:#f0ad4e; color:white; }
 .status-pronto{ background:#5cb85c; color:white; }
 
-/* CARD DO PEDIDO */
+/* CARTÃO DO PEDIDO */
 .pedido-card{
     background:white;
     border-radius:14px;
-    padding:18px;
-    margin-bottom:18px;
-    border:2px solid var(--dourado);
-    box-shadow:0 3px 12px rgba(0,0,0,0.15);
-    transition:.3s;
+    padding:16px 18px;
+    margin-bottom:15px;
+    box-shadow:0 3px 12px rgba(0,0,0,0.12);
+    transition:.25s;
+    border-left:4px solid var(--dourado);
 }
 .pedido-card:hover{
-    transform: translateY(-3px);
+    transform:translateY(-3px);
+    box-shadow:0 5px 16px rgba(0,0,0,0.18);
+}
+.pedido-card h3{
+    color:var(--azul);
+    margin-bottom:4px;
+    font-size:18px;
+}
+.pedido-card .sub{
+    font-size:13px;
+    color:#555;
+    margin-bottom:6px;
+}
+.pedido-card ul{
+    padding-left:20px;
+    margin-top:5px;
+    font-size:14px;
 }
 
-/* ANIMAÇÃO PISCAR NOVO */
+/* PISCAR NOVO PEDIDO */
 @keyframes piscar {
     0%{background-color:#fff6c7;}
     50%{background-color:#ffeaa7;}
     100%{background-color:#fff6c7;}
 }
-.pedido-novo{
+.pedido-novo-flash{
     animation: piscar 1s ease-in-out 3;
 }
 
-/* POPUP ALERTA */
+/* POPUP */
 .popup-alert {
     position: fixed;
     right: 20px;
@@ -59,13 +75,36 @@
     font-weight: bold;
     display: none;
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    animation: aparecer .3s ease;
+    animation: aparecer .4s ease;
     z-index: 9999;
+    font-size:14px;
 }
 
 @keyframes aparecer {
     from {opacity: 0; transform: translateY(20px);}
     to {opacity: 1; transform: translateY(0);}
+}
+
+/* BOTÕES */
+.btn-row{
+    margin-top:14px;
+    display:flex;
+    gap:8px;
+}
+.btn{
+    padding:10px 14px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
+.btn-warning{
+    background:#f0ad4e;
+    color:white;
+}
+.btn-primary{
+    background:#0275d8;
+    color:white;
 }
 </style>
 </head>
@@ -91,12 +130,12 @@
     </div>
 
     <div class="menu-item active" onclick="go('cozinha.html')">
-        <i class="fas fa-kitchen-set"></i> Cozinha
+        <i class="fas fa-kitchen-set"></i> Cozinha 
         <span id="badgeCozinha" style="
             display:none;
             background:#d9534f;
             color:white;
-            padding:2px 7px;
+            padding:2px 8px;
             border-radius:10px;
             font-size:12px;
             margin-left:6px;">!</span>
@@ -104,6 +143,10 @@
 
     <div class="menu-item" onclick="go('caixa.html')">
         <i class="fas fa-cash-register"></i> Caixa
+    </div>
+
+    <div class="menu-item" onclick="go('mesas.html')">
+        <i class="fas fa-chair"></i> Mesas
     </div>
 
     <div class="menu-item" onclick="go('colaboradores.html')">
@@ -117,37 +160,43 @@
 
 <!-- CONTEÚDO -->
 <div class="content">
+
     <h1 class="title">
         <i class="fas fa-kitchen-set"></i> Pedidos da Cozinha
     </h1>
 
+    <p style="margin-bottom:10px;font-size:14px;color:#555;">
+        Os pedidos aparecem em ordem: <b>NOVO</b> → <b>PREPARANDO</b> → <b>PRONTO</b>, com Mesa e Cliente.
+    </p>
+
     <div id="lista"></div>
+
 </div>
 
-<!-- SOM DO NOVO PEDIDO -->
+<!-- ÁUDIO DO ALERTA -->
 <audio id="alertSound"
- src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3"
- preload="auto"></audio>
+       src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3"
+       preload="auto"></audio>
 
 <!-- POPUP -->
 <div id="popup" class="popup-alert"></div>
 
-<!-- DESBLOQUEAR SOM NO PRIMEIRO CLIQUE -->
+<!-- LIBERAR ÁUDIO NO PRIMEIRO CLIQUE (MOBILE) -->
 <script>
-document.addEventListener("click", () => {
+document.addEventListener("click", function liberarAudio() {
     const audio = document.getElementById("alertSound");
-    audio.play().then(()=>{}).catch(()=>{});
-}, { once:true });
+    if (!audio) return;
+    audio.play().catch(()=>{});
+    document.removeEventListener("click", liberarAudio);
+});
 </script>
 
-<!-- FIREBASE -->
+<!-- ================= FIREBASE / LÓGICA COZINHA ================= -->
 <script type="module">
-
-import { auth, db } 
-from "https://rapha0904.github.io/MAVA-BRISTRO/ADMINISTRATIVO/firebase.js";
+import { auth, db } from "./firebase.js";
 
 import { onAuthStateChanged, signOut }
-from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 import {
     ref,
@@ -155,124 +204,143 @@ import {
     update
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+/* PROTEÇÃO */
 onAuthStateChanged(auth, user => {
     if (!user) window.location.href = "../login.html";
 });
 window.logout = () => signOut(auth);
 
+/* ELEMENTOS */
 const lista = document.getElementById("lista");
 const popup = document.getElementById("popup");
-const alertSound = document.getElementById("alertSound");
 const badge = document.getElementById("badgeCozinha");
+const alertSound = document.getElementById("alertSound");
 
-let ultimaLista = [];
+let primeiraVez = true;
+let ultimoIdAnunciado = null;
 
-/* ============================
-    LISTEN DE PEDIDOS
-============================ */
+/* ESCUTAR PEDIDOS EM TEMPO REAL */
 onValue(ref(db, "pedidos"), snap => {
 
     const pedidos = [];
 
-    snap.forEach(s => {
-        const p = s.val();
-        const id = s.key;
+    snap.forEach(item => {
+        const p = item.val();
+        const id = item.key;
 
         if (!p) return;
+        if (p.status === "finalizado") return;
 
-        // cozinha vê todos que não estão finalizados
-        if (p.status !== "finalizado") {
-            pedidos.push({ id, ...p });
-        }
+        pedidos.push({ id, ...p });
     });
 
-    // ordenar: novos > preparando > prontos
-    const ordem = { novo:1, preparando:2, pronto:3 };
-    pedidos.sort((a, b) => ordem[a.status] - ordem[b.status]);
+    pedidos.sort((a, b) => {
+        const ordem = { "novo":1, "preparando":2, "pronto":3 };
+        const sa = ordem[a.status] || 99;
+        const sb = ordem[b.status] || 99;
 
-    // detectar NOVOS pedidos
-    detectarNovosPedidos(pedidos);
+        if (sa !== sb) return sa - sb;
+        return (a.hora || 0) - (b.hora || 0);
+    });
 
-    // renderizar
+    /* ALERTA DE NOVO PEDIDO */
+    if (!primeiraVez) {
+        const novoPedido = pedidos.find(p => p.status === "novo");
+
+        if (novoPedido && novoPedido.id !== ultimoIdAnunciado) {
+            ultimoIdAnunciado = novoPedido.id;
+
+            alertSound.play().catch(()=>{});
+
+            const mesaTxt = novoPedido.mesa || "?";
+            const clienteTxt = novoPedido.nomeCliente || "Cliente";
+
+            popup.innerText = `Novo pedido — Mesa ${mesaTxt} (${clienteTxt})`;
+            popup.style.display = "block";
+            setTimeout(()=> popup.style.display = "none", 4000);
+
+            badge.style.display = "inline-block";
+
+            setTimeout(() => {
+                const card = document.getElementById("pedido-" + novoPedido.id);
+                if (card) card.classList.add("pedido-novo-flash");
+            }, 300);
+        }
+    }
+
+    primeiraVez = false;
+
+    /* RENDERIZAR LISTA */
     lista.innerHTML = "";
-    pedidos.forEach(p => renderPedido(p));
 
-    ultimaLista = pedidos.map(p => p.id);
+    pedidos.forEach(p => {
+
+        const mesaTxt = p.mesa || "?";
+        const clienteTxt = p.nomeCliente || "Cliente não identificado";
+        const horaTxt = p.hora
+            ? new Date(p.hora).toLocaleTimeString("pt-BR")
+            : "-";
+
+        let statusClass =
+            p.status === "novo" ? "status-novo" :
+            p.status === "preparando" ? "status-prep" :
+            "status-pronto";
+
+        lista.innerHTML += `
+            <div class="pedido-card" id="pedido-${p.id}">
+                <h3>Mesa ${mesaTxt} — ${clienteTxt}</h3>
+                <p class="sub"><b>Horário:</b> ${horaTxt}</p>
+
+                <p><b>Itens:</b></p>
+                <ul>
+                    ${(p.itens || []).map(i => `<li>${i}</li>`).join("")}
+                </ul>
+
+                ${typeof p.total === "number" ? `
+                    <p style="margin-top:6px;font-size:14px;">
+                        <b>Total estimado:</b> R$ ${p.total.toFixed(2)}
+                    </p>
+                ` : ""}
+
+                <span class="status-badge ${statusClass}">
+                    ${p.status.toUpperCase()}
+                </span>
+
+                <div class="btn-row">
+                    ${p.status === "novo" ? `
+                        <button class="btn btn-warning" onclick="preparar('${p.id}')">
+                            <i class="fas fa-fire"></i> Preparar
+                        </button>
+                    ` : ""}
+
+                    ${p.status === "preparando" ? `
+                        <button class="btn btn-primary" onclick="pronto('${p.id}')">
+                            <i class="fas fa-check"></i> Pronto
+                        </button>
+                    ` : ""}
+                </div>
+            </div>
+        `;
+    });
+
 });
 
-/* ============================
-    DETECTAR NOVOS PEDIDOS
-============================ */
-function detectarNovosPedidos(pedidos){
-    const novos = pedidos.filter(p => p.status === "novo");
-
-    if (novos.length > 0 && !ultimaLista.includes(novos[0].id)) {
-
-        const mesa = novos[0].mesa;
-
-        alertSound.play();
-        popup.innerText = `Novo pedido — Mesa ${mesa}`;
-        popup.style.display = "block";
-
-        setTimeout(()=> popup.style.display = "none", 4000);
-
-        badge.style.display = "inline-block";
-    }
-}
-
-/* ============================
-    RENDERIZAR CARD
-============================ */
-function renderPedido(p){
-
-    const fila =
-        p.status === "novo" ? "status-novo" :
-        p.status === "preparando" ? "status-prep" :
-        "status-pronto";
-
-    lista.innerHTML += `
-        <div class="pedido-card ${p.status === "novo" ? "pedido-novo" : ""}" id="ped-${p.id}">
-            <h3>Mesa ${p.mesa}</h3>
-            <p><b>Horário:</b> ${new Date(p.hora).toLocaleTimeString("pt-BR")}</p>
-
-            <p><b>Itens:</b></p>
-            <ul>${p.itens.map(i => `<li>${i}</li>`).join("")}</ul>
-
-            <span class="status-badge ${fila}">
-                ${p.status.toUpperCase()}
-            </span>
-
-            <div style="margin-top:15px;">
-                ${p.status === "novo" ? `
-                    <button class="btn btn-warning" onclick="preparar('${p.id}')">
-                        <i class="fas fa-fire"></i> Preparar
-                    </button>` : ""}
-
-                ${p.status === "preparando" ? `
-                    <button class="btn btn-primary" onclick="pronto('${p.id}')">
-                        <i class="fas fa-check"></i> Pronto
-                    </button>` : ""}
-            </div>
-        </div>
-    `;
-}
-
-/* ============================
-    AÇÕES DO COZINHEIRO
-============================ */
+/* AÇÕES */
 window.preparar = id => {
-    update(ref(db, "pedidos/" + id), { status:"preparando" });
+    update(ref(db, "pedidos/" + id), { status: "preparando" });
     badge.style.display = "none";
 };
 
 window.pronto = id => {
-    update(ref(db, "pedidos/" + id), { status:"pronto" });
+    update(ref(db, "pedidos/" + id), { status: "pronto" });
 };
 </script>
 
 <script>
 function go(p){ window.location.href = p }
-function toggleMenu(){ document.getElementById("sidebar").classList.toggle("active") }
+function toggleMenu(){
+    document.getElementById("sidebar").classList.toggle("active");
+}
 </script>
 
 </body>
