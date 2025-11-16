@@ -37,7 +37,11 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         <i class="fas fa-cash-register"></i> Caixa
     </div>
 
-    <div class="menu-item" onclick="go('colaboradores.html')">
+    <div class="menu-item" onclick="go('mesas.html')">
+        <i class="fas fa-chair"></i> Mesas
+    </div>
+
+    <div class="menu-item active" onclick="go('colaboradores.html')">
         <i class="fas fa-users"></i> Colaboradores
     </div>
 
@@ -68,6 +72,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
             <p id="resumoTotal"><b>Total:</b> 0</p>
             <p id="resumoCozinha"><b>Cozinha:</b> 0</p>
             <p id="resumoCaixa"><b>Caixa:</b> 0</p>
+            <p id="resumoRecepcao"><b>Recepção:</b> 0</p>
             <p id="resumoAdmin"><b>Administradores:</b> 0</p>
         </div>
 
@@ -84,6 +89,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
                 <option value="cozinha">Cozinha</option>
                 <option value="caixa">Caixa</option>
                 <option value="admin">Administrador</option>
+                <option value="recepcao">Recepção</option>
             </select>
 
             <button class="btn btn-primary" id="btnCadastrar">
@@ -185,7 +191,6 @@ function registrarLog(acao, colabEmail){
 
 /* ================================
    CADASTRAR / EDITAR COLABORADOR
-   (SEM DESLOGAR O ADMIN)
 ================================ */
 document.getElementById("btnCadastrar").onclick = async ()=>{
 
@@ -202,13 +207,13 @@ document.getElementById("btnCadastrar").onclick = async ()=>{
     }
 
     try{
-        // EDIÇÃO DE COLABORADOR (somente nome/nivel)
+        // EDIÇÃO DE COLABORADOR
         if(editId){
             const antigo = colaboradoresCache[editId] || {};
 
             await set(ref(db, "colaboradores/" + editId), {
                 nome,
-                email: antigo.email,         // mantém email original
+                email: antigo.email,
                 nivel,
                 uid: antigo.uid || null,
                 criadoPor: antigo.criadoPor || "",
@@ -218,7 +223,6 @@ document.getElementById("btnCadastrar").onclick = async ()=>{
             registrarLog("Edição de colaborador", antigo.email || email);
             alert("Colaborador atualizado com sucesso!");
 
-            // limpa estado de edição
             editId = null;
             textoBotao.textContent = "Cadastrar Colaborador";
             tituloForm.textContent = "Cadastrar Novo Colaborador";
@@ -229,7 +233,7 @@ document.getElementById("btnCadastrar").onclick = async ()=>{
             return;
         }
 
-        // NOVO COLABORADOR — CRIA USUÁRIO VIA REST API
+        // NOVO COLABORADOR
         const response = await fetch(
             `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyCaFP_oX5Rj6Jfmssn-5Rh3uPdiY3S9A2g`,
             {
@@ -253,7 +257,6 @@ document.getElementById("btnCadastrar").onclick = async ()=>{
 
         const uidCriado = data.localId;
 
-        // salva info do colaborador no DB
         await push(ref(db, "colaboradores"), {
             nome,
             email,
@@ -288,6 +291,7 @@ const tabela = document.getElementById("tabelaColab");
 const resumoTotal = document.getElementById("resumoTotal");
 const resumoCozinha = document.getElementById("resumoCozinha");
 const resumoCaixa = document.getElementById("resumoCaixa");
+const resumoRecepcao = document.getElementById("resumoRecepcao");
 const resumoAdmin = document.getElementById("resumoAdmin");
 
 onValue(ref(db, "colaboradores"), snapshot => {
@@ -298,6 +302,7 @@ onValue(ref(db, "colaboradores"), snapshot => {
     let total = 0;
     let coz = 0;
     let cax = 0;
+    let rec = 0;
     let adm = 0;
 
     snapshot.forEach(item => {
@@ -309,6 +314,7 @@ onValue(ref(db, "colaboradores"), snapshot => {
 
         if(c.nivel === "cozinha") coz++;
         else if(c.nivel === "caixa") cax++;
+        else if(c.nivel === "recepcao") rec++;
         else if(c.nivel === "admin") adm++;
 
         const criadoPor = c.criadoPor || "-";
@@ -348,6 +354,7 @@ onValue(ref(db, "colaboradores"), snapshot => {
     resumoTotal.innerHTML   = `<b>Total:</b> ${total}`;
     resumoCozinha.innerHTML = `<b>Cozinha:</b> ${coz}`;
     resumoCaixa.innerHTML   = `<b>Caixa:</b> ${cax}`;
+    resumoRecepcao.innerHTML= `<b>Recepção:</b> ${rec}`;
     resumoAdmin.innerHTML   = `<b>Administradores:</b> ${adm}`;
 });
 
@@ -361,7 +368,7 @@ window.editarColab = id => {
     editId = id;
     document.getElementById("nome").value  = c.nome;
     document.getElementById("email").value = c.email;
-    document.getElementById("email").disabled = true; // evita desalinhar com auth
+    document.getElementById("email").disabled = true;
     document.getElementById("senha").value = "";
     document.getElementById("nivel").value = c.nivel || "cozinha";
 
@@ -412,7 +419,6 @@ onValue(ref(db, "logs_colaboradores"), snapshot => {
         logsTemp.push(item.val());
     });
 
-    // ordenar do mais recente pro mais antigo
     logsTemp.sort((a,b)=> (b.data || 0) - (a.data || 0));
 
     logsTemp.slice(0,30).forEach(log => {
