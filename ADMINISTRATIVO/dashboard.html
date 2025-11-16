@@ -10,18 +10,18 @@
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
-/* CARDS DO DASHBOARD */
+/* ===== GRID CARDS ===== */
 .dash-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(250px,1fr));
-    gap:20px;
-    margin-top:20px;
+    grid-template-columns:repeat(auto-fit, minmax(260px,1fr));
+    gap:22px;
+    margin-top:25px;
 }
 
 .dash-card{
     background:white;
-    padding:20px;
-    border-radius:14px;
+    padding:22px;
+    border-radius:16px;
     box-shadow:0 3px 12px rgba(0,0,0,0.12);
     border-left:6px solid var(--dourado);
     transition:.3s;
@@ -32,21 +32,41 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
 }
 
 .dash-title{
-    font-size:20px;
+    font-size:18px;
     font-weight:bold;
     color:var(--azul);
 }
 
 .dash-value{
-    font-size:32px;
-    margin-top:10px;
+    font-size:34px;
+    margin-top:12px;
     font-weight:bold;
     color:var(--azul);
 }
 
-</style>
+/* ===== BEM-VINDO ===== */
+.welcome-card{
+    background:white;
+    padding:22px;
+    border-radius:16px;
+    box-shadow:0 3px 12px rgba(0,0,0,0.10);
+    margin-bottom:25px;
+    border-left:6px solid var(--dourado);
+}
 
+.welcome-card h2{
+    margin:0;
+    font-size:22px;
+    color:var(--azul);
+}
+
+.welcome-card p{
+    margin-top:6px;
+    font-size:16px;
+}
+</style>
 </head>
+
 <body>
 
 <!-- BTN MOBILE -->
@@ -59,12 +79,24 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
 
     <h2>Mava Baristro</h2>
 
-    <div class="menu-item" onclick="go('dashboard.html')">
+    <div class="menu-item active" onclick="go('dashboard.html')">
         <i class="fas fa-chart-line"></i> Dashboard
     </div>
 
     <div class="menu-item" onclick="go('produtos.html')">
         <i class="fas fa-mug-hot"></i> Produtos
+    </div>
+
+    <div class="menu-item" onclick="go('cozinha.html')">
+        <i class="fas fa-kitchen-set"></i> Cozinha
+    </div>
+
+    <div class="menu-item" onclick="go('caixa.html')">
+        <i class="fas fa-cash-register"></i> Caixa
+    </div>
+
+    <div class="menu-item" onclick="go('mesas.html')">
+        <i class="fas fa-chair"></i> Mesas
     </div>
 
     <div class="menu-item" onclick="go('colaboradores.html')">
@@ -79,9 +111,15 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
 
 <!-- CONTEÚDO -->
 <div class="content">
+
+    <!-- ==== BEM-VINDO ==== -->
+    <div class="welcome-card">
+        <h2 id="welcomeTitle">Bem-vindo ao painel!</h2>
+        <p>Aqui você acompanha pedidos, colaboradores, produtos e mesas.</p>
+    </div>
+
     <h1 class="title">Dashboard Administrativo</h1>
 
-    <!-- CARDS INFORMATIVOS -->
     <div class="dash-grid">
         
         <div class="dash-card">
@@ -90,8 +128,18 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         </div>
 
         <div class="dash-card">
-            <div class="dash-title"><i class="fas fa-money-bill-wave"></i> Total vendido (R$)</div>
+            <div class="dash-title"><i class="fas fa-cash-register"></i> Total vendido (R$)</div>
             <div class="dash-value" id="totalVendas">0,00</div>
+        </div>
+
+        <div class="dash-card">
+            <div class="dash-title"><i class="fas fa-chair"></i> Mesas Livres</div>
+            <div class="dash-value" id="mesasLivres">0</div>
+        </div>
+
+        <div class="dash-card">
+            <div class="dash-title"><i class="fas fa-chair"></i> Mesas Ocupadas</div>
+            <div class="dash-value" id="mesasOcupadas">0</div>
         </div>
 
         <div class="dash-card">
@@ -106,17 +154,9 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
 
     </div>
 
-    <!-- CARD DE BOAS VINDAS -->
-    <div class="card" style="margin-top:30px;">
-        <h2 style="color:var(--azul)">Bem-vindo ao painel, Administrador!</h2>
-        <p style="font-size:18px;margin-top:10px;">
-            Aqui você acompanha pedidos, colaboradores e produtos de forma centralizada.
-        </p>
-    </div>
-
 </div>
 
-<!-- ========================= FIREBASE ========================= -->
+<!-- FIREBASE -->
 <script type="module">
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut }
@@ -127,64 +167,84 @@ import {
     onValue
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-/* ====== Proteção ====== */
+/* LOGIN */
 onAuthStateChanged(auth, user => {
     if (!user) window.location.href = "../login.html";
+    else document.getElementById("welcomeTitle").innerText =
+        "Bem-vindo ao painel, " + user.email;
 });
+
 window.logout = () => signOut(auth);
 
-
-/* ====== TOTAL DE PEDIDOS E VENDAS ====== */
-const totalPedidos = document.getElementById("totalPedidos");
-const totalVendas  = document.getElementById("totalVendas");
-
+/* ========= PEDIDOS DO DIA ========= */
 onValue(ref(db, "pedidos"), snap => {
+
     let pedidosHoje = 0;
     let valorTotal  = 0;
+    const hoje = new Date();
 
     snap.forEach(item => {
         const p = item.val();
+        if (!p.hora) return;
 
-        const dataPedido = new Date(p.hora);
-        const hoje = new Date();
+        const d = new Date(p.hora);
 
-        const mesmoDia =
-            dataPedido.getDate() === hoje.getDate() &&
-            dataPedido.getMonth() === hoje.getMonth() &&
-            dataPedido.getFullYear() === hoje.getFullYear();
-
-        if (mesmoDia) {
+        if (
+            d.getDate() === hoje.getDate() &&
+            d.getMonth() === hoje.getMonth() &&
+            d.getFullYear() === hoje.getFullYear()
+        ) {
             pedidosHoje++;
-            valorTotal += Number(p.total);
+            valorTotal += Number(p.total || 0);
         }
     });
 
-    totalPedidos.innerText = pedidosHoje;
-    totalVendas.innerText = valorTotal.toFixed(2).replace(".", ",");
+    document.getElementById("totalPedidos").innerText = pedidosHoje;
+    document.getElementById("totalVendas").innerText =
+        valorTotal.toFixed(2).replace(".", ",");
 });
 
+/* ========= MESAS ========= */
+onValue(ref(db, "mesas"), snap => {
 
-/* ====== TOTAL DE PRODUTOS ====== */
-const totalProdutos = document.getElementById("totalProdutos");
+    let livres = 0;
+    let ocupadas = 0;
 
+    snap.forEach(item => {
+        const mesa = item.val();
+        if (!mesa || !mesa.status) return;
+
+        if (mesa.status === "livre") livres++;
+        else ocupadas++;
+    });
+
+    document.getElementById("mesasLivres").innerText   = livres;
+    document.getElementById("mesasOcupadas").innerText = ocupadas;
+});
+
+/* ========= PRODUTOS (CORRIGIDO) ========= */
 onValue(ref(db, "produtos"), snap => {
-    totalProdutos.innerText = snap.size || snap.numChildren();
+
+    if (!snap.exists()) {
+        document.getElementById("totalProdutos").innerText = 0;
+        return;
+    }
+
+    let total = 0;
+    snap.forEach(() => total++);
+
+    document.getElementById("totalProdutos").innerText = total;
 });
 
-
-/* ====== TOTAL DE COLABORADORES ====== */
-const totalColaboradores = document.getElementById("totalColaboradores");
-
+/* ========= COLABORADORES ========= */
 onValue(ref(db, "colaboradores"), snap => {
-    totalColaboradores.innerText = snap.size || snap.numChildren();
+    document.getElementById("totalColaboradores").innerText =
+        snap.numChildren();
 });
-
 </script>
 
 <script>
-function go(pagina){
-    window.location.href = pagina;
-}
+function go(p){ window.location.href = p; }
 function toggleMenu(){
     document.getElementById("sidebar").classList.toggle("active");
 }
