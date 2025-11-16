@@ -54,6 +54,20 @@
 .finalizar-btn:hover{
     background:#0d153b;
 }
+.info-vazio{
+    padding:15px;
+    border-radius:10px;
+    background:#f8f8f8;
+    border:1px dashed #bbb;
+    color:#555;
+}
+.status-badge{
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:bold;
+}
 </style>
 </head>
 
@@ -63,14 +77,39 @@
     <i class="fas fa-bars"></i>
 </div>
 
+<!-- NAVBAR COMPLETA E CORRIGIDA -->
 <div class="sidebar" id="sidebar">
+
     <h2>Mava Baristro</h2>
-    <div class="menu-item" onclick="go('dashboard.html')"><i class="fas fa-chart-line"></i> Dashboard</div>
-    <div class="menu-item" onclick="go('produtos.html')"><i class="fas fa-mug-hot"></i> Produtos</div>
-    <div class="menu-item" onclick="go('cozinha.html')"><i class="fas fa-kitchen-set"></i> Cozinha</div>
-    <div class="menu-item active" onclick="go('caixa.html')"><i class="fas fa-cash-register"></i> Caixa</div>
-    <div class="menu-item" onclick="go('colaboradores.html')"><i class="fas fa-users"></i> Colaboradores</div>
-    <div class="menu-item" onclick="logout()"><i class="fas fa-door-open"></i> Sair</div>
+
+    <div class="menu-item" onclick="go('dashboard.html')">
+        <i class="fas fa-chart-line"></i> Dashboard
+    </div>
+
+    <div class="menu-item" onclick="go('produtos.html')">
+        <i class="fas fa-mug-hot"></i> Produtos
+    </div>
+
+    <div class="menu-item" onclick="go('cozinha.html')">
+        <i class="fas fa-kitchen-set"></i> Cozinha
+    </div>
+
+    <div class="menu-item active" onclick="go('caixa.html')">
+        <i class="fas fa-cash-register"></i> Caixa
+    </div>
+
+    <div class="menu-item" onclick="go('mesas.html')">
+        <i class="fas fa-chair"></i> Mesas
+    </div>
+
+    <div class="menu-item" onclick="go('colaboradores.html')">
+        <i class="fas fa-users"></i> Colaboradores
+    </div>
+
+    <div class="menu-item" onclick="logout()">
+        <i class="fas fa-door-open"></i> Sair
+    </div>
+
 </div>
 
 <div class="content">
@@ -79,9 +118,7 @@
 </div>
 
 <script type="module">
-// 🔥 IMPORTAÇÃO CORRETA DO FIREBASE
-import { auth, db } 
-from "https://rapha0904.github.io/MAVA-BRISTRO/ADMINISTRATIVO/firebase.js";
+import { auth, db } from "./firebase.js";
 
 import { onAuthStateChanged, signOut }
     from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -89,74 +126,168 @@ import { onAuthStateChanged, signOut }
 import {
     ref,
     onValue,
-    update
+    update,
+    set
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-// Proteção
 onAuthStateChanged(auth, user => {
-    if (!user) window.location.href = "login.html";
+    if (!user) window.location.href = "../login.html";
 });
 window.logout = () => signOut(auth);
 
-// LISTA
 const lista = document.getElementById("lista");
 
-// 🔥 SEM FILTRO DE deviceId
-onValue(ref(db, "pedidos"), snap => {
+const mesasAgrupadas = {};
+const pedidosCache = {};
+
+onValue(ref(db, "pedidos"), pedidosSnap => {
 
     lista.innerHTML = "";
+    Object.keys(mesasAgrupadas).forEach(k => delete mesasAgrupadas[k]);
+    Object.keys(pedidosCache).forEach(k => delete pedidosCache[k]);
 
-    snap.forEach(item => {
+    if (!pedidosSnap.exists()){
+        lista.innerHTML = `<div class="info-vazio">Nenhum pedido encontrado.</div>`;
+        return;
+    }
 
-        const p = item.val();
+    pedidosSnap.forEach(item => {
+        const pedido = item.val();
         const id = item.key;
 
-        if (!p) return;
-        if (p.status !== "pronto") return; // APENAS PRONTOS
+        if (!pedido || pedido.status === "finalizado") return;
 
-        lista.innerHTML += `
-            <div class="pedido-card">
-                <h3>Mesa ${p.mesa}</h3>
+        pedidosCache[id] = pedido;
 
-                <p><b>Itens:</b></p>
-                <ul>${p.itens.map(i => `<li>${i}</li>`).join("")}</ul>
+        if (!mesasAgrupadas[pedido.mesa]){
+            mesasAgrupadas[pedido.mesa] = {
+                pedidos: [],
+                total: 0,
+                statusFinal: "pronto"
+            };
+        }
 
-                <p style="margin-top:10px;font-size:16px;">
-                    <b>Total:</b> R$ ${p.total.toFixed(2)}
-                </p>
+        mesasAgrupadas[pedido.mesa].pedidos.push({ id, ...pedido });
+        mesasAgrupadas[pedido.mesa].total += Number(pedido.total || 0);
 
-                <select id="pg-${id}" class="pay-select">
-                    <option value="">Forma de pagamento</option>
-                    <option value="Dinheiro">Dinheiro</option>
-                    <option value="Pix">Pix</option>
-                    <option value="Débito">Débito</option>
-                    <option value="Crédito">Crédito</option>
-                </select>
-
-                <button class="finalizar-btn" onclick="finalizar('${id}')">
-                    <i class="fas fa-check-circle"></i> Finalizar Pedido
-                </button>
-            </div>
-        `;
+        if (pedido.status === "novo") mesasAgrupadas[pedido.mesa].statusFinal = "novo";
+        if (pedido.status === "preparo" && mesasAgrupadas[pedido.mesa].statusFinal !== "novo")
+            mesasAgrupadas[pedido.mesa].statusFinal = "preparo";
     });
+
+    onValue(ref(db, "mesas"), mesasSnap => {
+
+        lista.innerHTML = "";
+
+        Object.keys(mesasAgrupadas).forEach(mesaId => {
+
+            const mesaData = mesasAgrupadas[mesaId];
+            const firebaseMesa = mesasSnap.child(mesaId).val();
+
+            const clientes = firebaseMesa?.clientes || [];
+            const nomesClientes = clientes.length ? clientes.join(", ") : "(Sem nome cadastrado)";
+
+            const status = mesaData.statusFinal;
+            const corStatus =
+                status === "novo" ? "#c0392b" :
+                status === "preparo" ? "#d68910" :
+                "#27ae60";
+
+            let pedidosHTML = "";
+
+            mesaData.pedidos.forEach((ped, idx) => {
+
+                let listaItens = "";
+                if (Array.isArray(ped.itens)) {
+                    listaItens = ped.itens.map(i => `<li>${i}</li>`).join("");
+                }
+
+                pedidosHTML += `
+                    <p><b>Pedido ${idx + 1}:</b></p>
+                    <ul>${listaItens}</ul>
+                    <p><b>Total do pedido:</b> R$ ${Number(ped.total).toFixed(2)}</p>
+                    <br>
+                `;
+            });
+
+            lista.innerHTML += `
+                <div class="pedido-card">
+                    <h3>
+                        Mesa ${mesaId} —
+                        <span style="font-size:16px;color:#555;font-weight:normal;">
+                            ${nomesClientes}
+                        </span>
+                    </h3>
+
+                    <p>
+                        <b>Status da mesa:</b>
+                        <span class="status-badge"
+                            style="background:${corStatus}20;color:${corStatus};border:1px solid ${corStatus};">
+                            ${status.toUpperCase()}
+                        </span>
+                    </p>
+
+                    <hr style="margin:10px 0;opacity:.4;">
+                    ${pedidosHTML}
+                    <hr style="margin:10px 0;opacity:.4;">
+
+                    <p style="font-size:18px;">
+                        <b>Total da mesa:</b> R$ ${mesaData.total.toFixed(2)}
+                    </p>
+
+                    ${
+                        status === "pronto"
+                        ? `
+                            <select id="pg-${mesaId}" class="pay-select">
+                                <option value="">Forma de pagamento</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Pix">Pix</option>
+                                <option value="Débito">Débito</option>
+                                <option value="Crédito">Crédito</option>
+                            </select>
+
+                            <button class="finalizar-btn" onclick="finalizarMesa('${mesaId}')">
+                                <i class="fas fa-check-circle"></i> Finalizar e liberar mesa
+                            </button>
+                        `
+                        : `<p style="margin-top:10px;color:#999;font-size:14px;">
+                            Aguarde todos os pedidos ficarem <b>prontos</b>.
+                        </p>`
+                    }
+                </div>
+            `;
+        });
+
+    });
+
 });
 
-// FINALIZAR
-window.finalizar = id => {
+/* FINALIZA TODA A MESA */
+window.finalizarMesa = async mesaId => {
 
-    const forma = document.getElementById("pg-" + id).value;
+    const forma = document.getElementById("pg-" + mesaId).value;
 
     if(!forma){
         alert("Selecione a forma de pagamento!");
         return;
     }
 
-    update(ref(db, "pedidos/" + id), {
-        status: "finalizado",
-        pagamento: forma
+    const mesaInfo = mesasAgrupadas[mesaId];
+
+    for (const ped of mesaInfo.pedidos){
+        await update(ref(db, "pedidos/" + ped.id), {
+            status: "finalizado",
+            pagamento: forma,
+            horaFinalizacao: Date.now()
+        });
+    }
+
+    await set(ref(db, "mesas/" + mesaId), {
+        status: "livre",
+        clientes: []
     });
 
-    alert("Pedido finalizado!");
+    alert("Mesa finalizada e liberada!");
 };
 </script>
 
