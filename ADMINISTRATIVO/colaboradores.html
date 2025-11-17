@@ -16,7 +16,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     <i class="fas fa-bars"></i>
 </div>
 
-<!-- SIDEBAR -->
+<!-- NAVBAR -->
 <div class="sidebar" id="sidebar">
 
     <h2>Mava Baristro</h2>
@@ -51,12 +51,12 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
 
 </div>
 
-<!-- CONTEÚDO -->
+<!-- SITE -->
 <div class="content">
 
     <h1 class="title">Gerenciar Colaboradores</h1>
 
-    <!-- APENAS ADMIN MASTER -->
+    <!-- APENAS EU PARA ACESSAR E CADASTRAR NOVOS COLABORADORES -->
     <div id="masterAviso" class="card" style="display:none;background:#ffe1e1;border-left:5px solid red;">
         <h2 style="color:red;">Acesso Negado</h2>
         <p>Somente o Administrador Master pode acessar esta página.</p>
@@ -64,7 +64,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
 
     <div id="conteudoMaster">
 
-        <!-- CARD RESUMO (mini dashboard de colaboradores) -->
+        <!-- DASHBOARD COM INFORMAÇÕES -->
         <div class="card" id="card-resumo">
             <h2 style="color:var(--azul); margin-bottom:10px;">
                 Visão geral dos colaboradores
@@ -76,7 +76,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
             <p id="resumoAdmin"><b>Administradores:</b> 0</p>
         </div>
 
-        <!-- CADASTRO / EDIÇÃO -->
+        <!-- CADASTRO E EDIÇÃO -->
         <div class="card">
             <h2 id="tituloForm" style="color:var(--azul)">Cadastrar Novo Colaborador</h2>
 
@@ -97,7 +97,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
             </button>
         </div>
 
-        <!-- LISTA -->
+        <!-- LISTA DOS COLABORADORES -->
         <div class="card">
             <h2 style="color:var(--azul)">Colaboradores cadastrados</h2>
 
@@ -116,7 +116,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
             </table>
         </div>
 
-        <!-- LOGS -->
+        <!-- LOGINS -->
         <div class="card">
             <h2 style="color:var(--azul)">Atividades Recentes</h2>
             <ul id="listaLogs" style="max-height:220px; overflow-y:auto; padding-left:18px;"></ul>
@@ -127,8 +127,9 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
 </div>
 
 <script type="module">
+
 /* ================================
-   IMPORTS FIREBASE
+   IMPORTAÇÃO DE DADOS DO FIREBASE
 ================================ */
 import { auth, db } from "./firebase.js";
 import { 
@@ -146,7 +147,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 /* ================================
-   PROTEÇÃO — SOMENTE ADMIN MASTER
+   ACESSO PARA SOMENTE ADMIN MASTER (EU)
 ================================ */
 let usuarioAtualEmail = "";
 let usuarioAtualUid = "";
@@ -161,7 +162,7 @@ onAuthStateChanged(auth, user => {
     usuarioAtualEmail = user.email;
     usuarioAtualUid = user.uid;
 
-    // se NÃO for o master → bloqueia página
+    // se  for o master → bloqueia página
     if (usuarioAtualEmail !== usuarioMaster) {
         document.getElementById("conteudoMaster").style.display = "none";
         document.getElementById("masterAviso").style.display = "block";
@@ -190,7 +191,7 @@ function registrarLog(acao, colabEmail){
 }
 
 /* ================================
-   CADASTRAR / EDITAR COLABORADOR
+   CADASTRAR E EDITAR COLABORADORES
 ================================ */
 document.getElementById("btnCadastrar").onclick = async ()=>{
 
@@ -207,7 +208,7 @@ document.getElementById("btnCadastrar").onclick = async ()=>{
     }
 
     try{
-        // EDIÇÃO DE COLABORADOR
+        // EDIÇÃO DE COLABORADORES
         if(editId){
             const antigo = colaboradoresCache[editId] || {};
 
@@ -276,7 +277,7 @@ document.getElementById("btnCadastrar").onclick = async ()=>{
     }
 };
 
-/* LIMPAR FORM BÁSICO */
+/* LIMPAR FORMULARIO BÁSICO */
 function limparFormularioBasico(){
     document.getElementById("nome").value = "";
     document.getElementById("email").value = "";
@@ -359,7 +360,7 @@ onValue(ref(db, "colaboradores"), snapshot => {
 });
 
 /* ================================
-   EDITAR COLABORADOR
+   EDITAR COLABORADORES
 ================================ */
 window.editarColab = id => {
     const c = colaboradoresCache[id];
@@ -377,7 +378,7 @@ window.editarColab = id => {
 };
 
 /* ================================
-   REDEFINIR SENHA (envia e-mail)
+   REDEFINIR SENHA (envia um e-mail)
 ================================ */
 window.resetSenha = async (email) => {
     if(!confirm(`Enviar e-mail de redefinição para ${email}?`)) return;
