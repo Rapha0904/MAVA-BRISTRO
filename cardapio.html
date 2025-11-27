@@ -62,7 +62,7 @@ body{
     cursor:pointer;
 }
 
-/* ================= HEADER ================= */
+/* ================= HEADER PRINCIPAL ================= */
 header{
     background:var(--azul);
     color:white;
@@ -91,7 +91,17 @@ header h1{
     font-weight:bold;
 }
 
-header .mesa-info{
+/* ============ BARRA SUPERIOR (MESA + CARRINHO) ============ */
+.top-info{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:white;
+    padding:12px 22px;
+    border-bottom:3px solid var(--dourado);
+}
+
+.mesa-info{
     background:var(--dourado);
     padding:8px 16px;
     border-radius:12px;
@@ -101,7 +111,21 @@ header .mesa-info{
     box-shadow:0 3px 10px rgba(0,0,0,0.25);
 }
 
-/* NAV */
+.carrinho-btn{
+    width:58px;
+    height:58px;
+    border-radius:50%;
+    background:var(--dourado);
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* ================= NAV ================= */
 .nav{
     background:white;
     display:flex;
@@ -126,7 +150,7 @@ header .mesa-info{
     color:var(--dourado);
 }
 
-/* GRID */
+/* ================= GRID ================= */
 .menu-grid{
     display:grid;
     grid-template-columns:repeat(auto-fit, minmax(190px, 1fr));
@@ -134,7 +158,7 @@ header .mesa-info{
     padding:20px;
 }
 
-/* CARD */
+/* ================= CARD ================= */
 .card{
     background:#ffffff;
     border-radius:16px;
@@ -172,7 +196,7 @@ header .mesa-info{
     color:var(--azul);
 }
 
-/* BOTÃO */
+/* ================= BOTÃO ================= */
 .add-btn{
     margin-top:12px;
     background:var(--azul);
@@ -191,7 +215,7 @@ header .mesa-info{
     background:#0f173e;
 }
 
-/* CARRINHO */
+/* ================= CARRINHO ================= */
 #carrinho{
     position:fixed;
     top:0;
@@ -205,24 +229,6 @@ header .mesa-info{
     transition:.4s;
     overflow-y:auto;
     z-index:999;
-}
-
-#btn-carrinho{
-    position:fixed;
-    top:20px;
-    right:20px;
-    width:58px;
-    height:58px;
-    border-radius:50%;
-    background:var(--dourado);
-    color:white;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:24px;
-    cursor:pointer;
-    box-shadow:0 4px 10px rgba(0,0,0,0.25);
-    z-index:1000;
 }
 
 #lista-itens li{
@@ -249,24 +255,31 @@ header .mesa-info{
 
 <body>
 
-<!-- BLOQUEIO DA PÁGINA -->
+<!-- ================= BLOQUEIO DA PÁGINA ================= -->
 <div id="telaBloqueada" style="display:none;">
     <h2 id="bloqTitulo"></h2>
     <p id="bloqMsg"></p>
     <button onclick="window.location.reload()">Atualizar</button>
 </div>
 
+<!-- ================= HEADER PRINCIPAL ================= -->
 <header>
     <div class="left">
         <img src="logo_mava_baristro.png">
         <h1>Mava Baristro</h1>
     </div>
-
-    <div class="mesa-info" id="mesaInfo">Carregando...</div>
 </header>
 
-<div id="btn-carrinho"><i class="fas fa-shopping-cart"></i></div>
+<!-- ================= BARRA SUPERIOR ================= -->
+<div class="top-info">
+    <div class="mesa-info" id="mesaInfo">Carregando...</div>
 
+    <div id="btn-carrinho" class="carrinho-btn">
+        <i class="fas fa-shopping-cart"></i>
+    </div>
+</div>
+
+<!-- NAV -->
 <div class="nav">
     <button class="active" data-cat="cafes">Cafés</button>
     <button data-cat="bebidas">Bebidas</button>
@@ -276,6 +289,7 @@ header .mesa-info{
 
 <div class="menu-grid" id="grid"></div>
 
+<!-- ================= CARRINHO ================= -->
 <div id="carrinho">
     <h2>Carrinho</h2>
     <ul id="lista-itens"></ul>
@@ -283,20 +297,21 @@ header .mesa-info{
     <button class="confirmar-btn" id="confirmar">Confirmar Pedido</button>
 </div>
 
+<!-- ================= JS / FIREBASE ================= -->
 <script type="module">
+
 /* ====== PEGAR MESA DO QR ====== */
 const params = new URLSearchParams(window.location.search);
 const mesa = params.get("mesa") || "Mesa não encontrada";
-document.getElementById("mesaInfo").innerText = `Mesa ${mesa}`;
 
-/* ========= DEVICE ========= */
+/* ====== DEVICE ====== */
 let deviceId = localStorage.getItem("deviceId");
 if(!deviceId){
     deviceId = "dev-" + Math.random().toString(36).substr(2,9);
     localStorage.setItem("deviceId", deviceId);
 }
 
-/* ========= FIREBASE ========= */
+/* ====== FIREBASE ====== */
 import { db } from "./ADMINISTRATIVO/firebase.js";
 import { ref, onValue, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
@@ -322,7 +337,6 @@ onValue(ref(db, "mesas/" + mesa), snap => {
         return;
     }
 
-    // OK — mesa válida
     nomeCliente = dados.clientes[0];
     document.getElementById("mesaInfo").innerText =
         `Mesa ${mesa} — Bem-vindo, ${nomeCliente}`;
@@ -330,19 +344,18 @@ onValue(ref(db, "mesas/" + mesa), snap => {
     liberarPagina();
 });
 
-/* BLOQUEAR TUDO */
+/* =================== BLOQUEIOS ===================== */
 function bloquear(titulo, msg){
     document.getElementById("bloqTitulo").innerText = titulo;
     document.getElementById("bloqMsg").innerText = msg;
     document.getElementById("telaBloqueada").style.display = "flex";
 }
 
-/* LIBERAR PÁGINA */
 function liberarPagina(){
     document.getElementById("telaBloqueada").style.display = "none";
 }
 
-/* ========== CARRINHO ========== */
+/* =================== CARRINHO ===================== */
 document.getElementById("btn-carrinho").onclick = ()=>{
     const painel = document.getElementById("carrinho");
     painel.style.transform =
@@ -351,7 +364,7 @@ document.getElementById("btn-carrinho").onclick = ()=>{
         : "translateX(0%)";
 };
 
-/* ========= PRODUTOS ========= */
+/* =================== PRODUTOS ===================== */
 let categoriaAtual = "cafes";
 const grid = document.getElementById("grid");
 
@@ -392,7 +405,7 @@ function carregarProdutos(){
 }
 carregarProdutos();
 
-/* ========= CARRINHO ========= */
+/* =================== CARRINHO ===================== */
 let total = 0;
 const ul = document.getElementById("lista-itens");
 
@@ -413,7 +426,7 @@ function ativarBotoes(){
     });
 }
 
-/* ========= ENVIAR PEDIDO ========= */
+/* =================== ENVIAR PEDIDO ===================== */
 document.getElementById("confirmar").onclick = ()=>{
 
     if(!nomeCliente){
